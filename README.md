@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/lobster.jpg" alt="OpenClaw Lobster" width="200">
+</p>
+
 # OpenClaw Skills Kit
 
 Skills et templates pour créer et gérer des agents IA avec [OpenClaw](https://github.com/openclaw/openclaw) (>= 2026.3.8).
