@@ -43,6 +43,10 @@ cp -r templates/agent-openclaw ~/.claude/templates/
 
 Puis lancer `/agent-openclaw Mon premier agent` dans Claude Code.
 
+## Autres CLI IA (Codex, Gemini CLI)
+
+Les templates et scripts fonctionnent tels quels avec n'importe quel assistant IA. Pour le skill `agent-openclaw.md`, copiez son contenu dans votre fichier d'instructions (`AGENTS.md` pour Codex, `GEMINI.md` pour Gemini CLI) ou collez-le en prompt. Le frontmatter `---` en tête de fichier est spécifique à Claude Code et peut être ignoré.
+
 ## Prérequis
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) ou équivalent
