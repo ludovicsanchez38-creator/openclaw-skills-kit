@@ -1,13 +1,15 @@
 ---
 description: "Crée un agent OpenClaw de A à Z (install + config + deploy) avec avocat du diable et superviseur"
 argument-hint: "[nom de l'agent ou description du besoin]"
-allowed-tools: ["Read", "Glob", "Grep", "WebSearch", "WebFetch", "Write", "Edit", "Bash"]
+allowed-tools: ["Read", "Glob", "Grep", "WebSearch", "WebFetch", "Write", "Edit", "Bash", "AskUserQuestion"]
 ---
 
 # Agent OpenClaw - Création guidée de A à Z
 
-> Version 3.5 - Compatible OpenClaw >= 2026.3.8
+> Version 3.6 - Compatible OpenClaw >= 2026.3.8
 > Templates : `~/.claude/templates/agent-openclaw/`
+
+**Format** : Toutes les questions à choix utilisent `AskUserQuestion` pour un parcours interactif (max 4 options + "Autre" automatique).
 
 Deux rôles t'accompagnent :
 - **Avocat du diable** : challenge chaque décision (phases 2, 3, 4) avec des objections CONCRÈTES
@@ -61,8 +63,15 @@ Avant notre session, merci de préparer :
 >
 > **Note pour le client** : cette phase est entièrement pilotée par le formateur. Vous n'avez rien à faire ici - on s'occupe de tout. Pour les sessions FORGER, cette phase est faite en amont.
 
-### 0.1 - Machine cible (question)
-1. VPS (Ubuntu/Debian) | 2. Serveur dédié | 3. macOS local | 4. Linux local | 5. Autre
+### 0.1 - Machine cible
+Poser la question avec `AskUserQuestion` :
+- header: "Machine"
+- question: "Sur quelle machine veux-tu installer ton agent ?"
+- options:
+  1. label: "VPS (Ubuntu/Debian)" | description: "Serveur distant, le plus courant pour un agent 24/7"
+  2. label: "Serveur dédié" | description: "Machine physique ou VM dédiée"
+  3. label: "macOS local" | description: "MacBook ou iMac, idéal pour tester"
+  4. label: "Linux local" | description: "Machine Linux desktop ou mini-PC"
 
 ### 0.2 - Vérification des prérequis
 Exécuter automatiquement :
@@ -92,18 +101,18 @@ openclaw --version && openclaw doctor --fix
 
 ### 0.4 - Clé API et sécurité réseau
 
-```
-Quel fournisseur IA ?
-1. ChatGPT Plus (Recommandé - 20$/mois, illimité via token OAuth)
-2. Anthropic (clé API, facturation à l'usage)
-3. Infomaniak AI (suisse souverain, OpenAI-compatible)
-4. Autre (OpenAI API directe, Gemini, Mistral, Ollama local)
-```
+Poser la question avec `AskUserQuestion` :
+- header: "Provider IA"
+- question: "Quel fournisseur IA pour l'agent ?"
+- options:
+  1. label: "ChatGPT Plus (Recommandé)" | description: "20$/mois illimité via token OAuth"
+  2. label: "Anthropic" | description: "Clé API, facturation à l'usage"
+  3. label: "Infomaniak AI" | description: "Suisse souverain, OpenAI-compatible"
+  4. label: "Ollama local" | description: "Gratuit, modèle local (Mistral, Llama...)"
 
 **Si ChatGPT Plus (recommandé)** :
 ```bash
-openclaw codex login --device-auth   # Ouvre un navigateur, connecte le compte ChatGPT
-# Le token OAuth se refresh automatiquement, pas de clé API à gérer
+openclaw secrets configure --apply   # Assistant interactif : choisir provider OpenAI Codex, coller le token
 # Le modèle utilisé sera automatiquement le meilleur dispo sur l'abo (gpt-5.4)
 ```
 Note : impossible de forcer un modèle inférieur (5.1) avec le token ChatGPT Plus. Le provider résout toujours vers le meilleur modèle.
@@ -135,14 +144,14 @@ sudo apt-get install -y fail2ban        # Anti brute-force SSH
 
 ## PHASE 1 : TEMPLATE (~2 min)
 
-```
-Quel type d'agent ?
-1. Polyvalent (Recommandé) - tri-mode : propriétaire + prospect + client
-2. Commercial - qualification prospects, booking
-3. SAV - support client, tickets, escalade
-4. Assistant personnel - todo, recherche, proactif
-5. From scratch - tout à définir
-```
+Poser la question avec `AskUserQuestion` :
+- header: "Template"
+- question: "Quel type d'agent veux-tu créer ?"
+- options:
+  1. label: "Polyvalent (Recommandé)" | description: "Tri-mode : propriétaire + prospect + client. Le plus complet."
+  2. label: "Commercial" | description: "Qualification prospects, booking, scoring BANT"
+  3. label: "SAV" | description: "Support client, tickets, escalade"
+  4. label: "Assistant personnel" | description: "Todo, recherche, proactif. Ou 'From scratch' via Autre."
 
 ---
 
@@ -150,12 +159,25 @@ Quel type d'agent ?
 
 > Objectif : Générer IDENTITY.md, USER.md, SOUL.md
 
-### 2.1 - Questions (une à la fois)
-1. Nom de l'agent (ex: Syn, Nova, Max)
-2. Genre : Masculin / Féminin / Neutre
-3. Entreprise
-4. Secteur d'activité
-5. Ton : Pro et chaleureux (rec.) / Corporate / Décontracté / Autre
+### 2.1 - Questions (une à la fois, via `AskUserQuestion`)
+
+**IMPORTANT** : Toutes les questions utilisent `AskUserQuestion` pour une UX cohérente. Pour les questions "texte libre" (nom, entreprise, secteur), proposer des exemples GÉNÉRIQUES - jamais d'infos spécifiques au formateur ou au contexte Synoptïa. L'utilisateur peut toujours choisir "Autre" pour saisir sa propre réponse.
+
+**Question 1** - header: "Nom" | question: "Quel nom pour ton agent ?"
+- options: label: "Nova" | description: "Moderne, féminin" | label: "Max" | description: "Dynamique, masculin" | label: "Pixel" | description: "Tech, neutre" | label: "Aria" | description: "Doux, féminin"
+
+**Question 2** - header: "Genre" | question: "Quel genre pour l'agent ?"
+- options: label: "Féminin" | label: "Masculin" | label: "Neutre"
+
+**Question 3** - header: "Entreprise" | question: "Quel est le nom de ton entreprise ?"
+- options: label: "Mon entreprise" | description: "Saisir le nom via Autre" | label: "Je n'ai pas encore de nom" | description: "On choisira plus tard"
+- **Ne JAMAIS pré-remplir avec le nom d'une vraie entreprise**
+
+**Question 4** - header: "Secteur" | question: "Quel est ton secteur d'activité ?"
+- options: label: "Commerce / Artisanat" | description: "Boutique, artisan, restauration" | label: "Services / Conseil" | description: "Consulting, coaching, formation" | label: "Tech / Digital" | description: "Dev, SaaS, agence web" | label: "Santé / Bien-être" | description: "Praticien, coach, thérapeute"
+
+**Question 5** - header: "Ton" | question: "Quel ton pour l'agent ?"
+- options: label: "Pro et chaleureux (Recommandé)" | description: "Vouvoiement prospects, tutoiement proprio" | label: "Corporate" | description: "Formel, vouvoiement systématique" | label: "Décontracté" | description: "Tutoiement, emoji, familier"
 
 ### 2.2 - Infos business (si Polyvalent, Commercial ou SAV)
 1. Offres avec prix (format libre)
@@ -187,56 +209,79 @@ Objections CONCRÈTES obligatoires (adapter au contexte) :
 > Objectif : Générer un openclaw.json COMPLET
 
 ### 3.1 - Canal
-1. WhatsApp (courant TPE) | 2. Discord | 3. Telegram | 4. Autre
+Poser la question avec `AskUserQuestion` :
+- header: "Canal"
+- question: "Sur quel canal l'agent communiquera-t-il ?"
+- options:
+  1. label: "WhatsApp (Recommandé)" | description: "Le plus courant pour les TPE/PME"
+  2. label: "Discord" | description: "Idéal pour les communautés et équipes tech"
+  3. label: "Telegram" | description: "Populaire, bots faciles à créer"
 
 ### 3.2 - Modèle
 
-Le choix dépend du provider configuré en Phase 0.4 :
+Le choix dépend du provider configuré en Phase 0.4. Poser la question avec `AskUserQuestion` :
 
-```
-Si ChatGPT Plus (Phase 0.4 choix 1) :
-→ Modèle automatique : gpt-5.4 (inclus dans l'abo 20$/mois)
-→ Pas de choix de modèle, le token résout vers le meilleur
-→ Coût fixe : 20$/mois quel que soit le volume
+**Si ChatGPT Plus** : pas de choix, modèle automatique gpt-5.4 (inclus 20$/mois). Passer directement.
 
-Si Anthropic (Phase 0.4 choix 2) :
-1. claude-sonnet-4-6 (Recommandé)
-   20-50 msg/jour = 1-3 EUR/j | 100+ msg/jour = 3-8 EUR/j
-2. claude-opus-4-6 (Premium)
-   20-50 msg/jour = 5-15 EUR/j | 100+ msg/jour = 15-40 EUR/j
-3. claude-haiku-4-5 (Économique)
-   20-50 msg/jour = 0.20-0.80 EUR/j
+**Si Anthropic** :
+- header: "Modèle IA"
+- question: "Quel modèle Claude pour l'agent ?"
+- options:
+  1. label: "claude-sonnet-4-6 (Recommandé)" | description: "20-50 msg/j = 1-3 EUR/j | 100+ msg/j = 3-8 EUR/j"
+  2. label: "claude-opus-4-6 (Premium)" | description: "20-50 msg/j = 5-15 EUR/j | 100+ msg/j = 15-40 EUR/j"
+  3. label: "claude-haiku-4-5 (Économique)" | description: "20-50 msg/j = 0.20-0.80 EUR/j"
 
-Si Infomaniak AI (Phase 0.4 choix 3) :
-1. mix (Polyvalent)
-2. mix-large (Puissant)
+**Si Infomaniak AI** :
+- header: "Modèle IA"
+- question: "Quel modèle Infomaniak ?"
+- options:
+  1. label: "mix (Polyvalent)" | description: "Bon rapport qualité/prix"
+  2. label: "mix-large (Puissant)" | description: "Meilleure qualité, plus cher"
 
-Si Ollama local :
-→ Gratuit, modèle selon la RAM dispo
-→ Recommandé : mistral-nemo (8 Go RAM min)
-```
+**Si Ollama local** : recommander mistral-nemo (8 Go RAM min).
+
 Note : le heartbeat génère ~48 appels/jour inclus dans les estimations.
 Si Anthropic : recommander un budget alert sur console.anthropic.com.
 
 ### 3.3 - Mémoire
-1. QMD Standard (rec.) - QMD (moteur de mémoire intelligent) utilise BM25 (recherche par mots-clés, rapide et léger), sessions 90j, refresh 5min, RAM min 2 Go
-2. QMD Avancé - hybride + rerank (recherche sémantique + reclassement par pertinence), RAM min 8 Go
-3. Builtin - pas de QMD, agent simple sans mémoire longue
+Poser la question avec `AskUserQuestion` :
+- header: "Mémoire"
+- question: "Quel système de mémoire pour l'agent ?"
+- options:
+  1. label: "QMD Standard (Recommandé)" | description: "BM25 (recherche par mots-clés), sessions 90j, refresh 5min, RAM min 2 Go"
+  2. label: "QMD Avancé" | description: "Hybride + rerank (recherche sémantique + reclassement), RAM min 8 Go"
+  3. label: "Builtin" | description: "Mémoire basique intégrée, pas de QMD, agent simple"
 
 Si QMD : `npm install -g @tobilu/qmd` (modèles ~2 Go auto-téléchargés au 1er lancement)
 
 ### 3.4 - Options rapides
-- Heartbeat (signal de vie régulier) : 30 min (déf.) / 1h / 12h / Désactivé
-- Context pruning TTL (durée de vie du contexte avant oubli) : 6h (WhatsApp, rec.) / 24h (Discord) / Perso
+
+**Heartbeat** - Poser la question avec `AskUserQuestion` :
+- header: "Heartbeat"
+- question: "À quelle fréquence l'agent vérifie-t-il ses tâches automatiquement ?"
+- options:
+  1. label: "30 min (Recommandé)" | description: "Bon compromis réactivité/coût (~48 appels/jour)"
+  2. label: "1h" | description: "Plus économique (~24 appels/jour)"
+  3. label: "12h" | description: "Très économique, 2 checks/jour seulement"
+  4. label: "Désactivé" | description: "Pas de checks auto, l'agent ne répond qu'aux messages"
+
+**Context pruning TTL** - Poser la question avec `AskUserQuestion` :
+- header: "Context pruning"
+- question: "Combien de temps garder le contexte des conversations ?"
+- options:
+  1. label: "6h (Recommandé WhatsApp)" | description: "Conversations courtes, reset fréquent"
+  2. label: "24h (Recommandé Discord)" | description: "Conversations longues, discussions de groupe"
+  3. label: "Personnalisé" | description: "Définir une valeur personnalisée"
 
 ### 3.5 - CRM
 
-```
-Comment gérer les contacts ?
-1. CRM local (Recommandé pour démarrer - fichier JSON dans le workspace, zéro setup)
-2. Google Sheets (plus visuel, nécessite un compte Google + Apps Script)
-3. Plus tard
-```
+Poser la question avec `AskUserQuestion` :
+- header: "CRM"
+- question: "Comment gérer les contacts de l'agent ?"
+- options:
+  1. label: "CRM local (Recommandé)" | description: "Fichier JSON dans le workspace, zéro setup"
+  2. label: "Google Sheets" | description: "Plus visuel, nécessite un compte Google + Apps Script"
+  3. label: "Plus tard" | description: "On se concentre sur le reste d'abord"
 
 Si choix 1 : copier `~/.claude/templates/agent-openclaw/scripts/crm-local.py` dans le workspace + créer `data/crm.json`. Lire `~/.claude/templates/agent-openclaw/crm-template.md` pour la structure.
 Si choix 2 : créer le Google Sheet selon la structure dans `crm-template.md` + déployer l'Apps Script.
@@ -245,12 +290,13 @@ Si choix 2 : créer le Google Sheet selon la structure dans `crm-template.md` + 
 
 ### 3.6 - Email (optionnel)
 
-```
-L'agent aura-t-il sa propre adresse email ?
-1. Plus tard (recommandé - se concentrer sur le canal principal d'abord)
-2. Oui - On configure maintenant
-3. Non
-```
+Poser la question avec `AskUserQuestion` :
+- header: "Email"
+- question: "L'agent aura-t-il sa propre adresse email ?"
+- options:
+  1. label: "Plus tard (Recommandé)" | description: "Se concentrer sur le canal principal d'abord"
+  2. label: "Oui" | description: "On configure l'email maintenant (IMAP/SMTP)"
+  3. label: "Non" | description: "Pas d'email pour cet agent"
 
 Si oui : guider pas à pas (créer la boîte, configurer IMAP/SMTP via `openclaw secrets`, copier les scripts depuis `~/.claude/templates/agent-openclaw/scripts/`). Scripts : `send-email.py` (Python pur, sécurisé) et `check-inbox.py` (SSL vérifié).
 
@@ -634,5 +680,5 @@ openclaw gateway start
 
 ---
 
-*Commande /agent-openclaw v3.5*
+*Commande /agent-openclaw v3.6*
 *Templates : ~/.claude/templates/agent-openclaw/*
