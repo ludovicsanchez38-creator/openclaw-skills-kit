@@ -1,0 +1,19 @@
+# Fichiers systeme
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Dépendances
+node_modules/
+
+# Secrets (ne jamais committer)
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+credentials
+credentials.*
