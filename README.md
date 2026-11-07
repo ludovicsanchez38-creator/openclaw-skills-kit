@@ -9,7 +9,7 @@ Skills et templates pour créer et gérer des agents IA avec [OpenClaw](https://
 ## Contenu
 
 ### `/commands/agent-openclaw.md`
-Commande interactive pour créer un agent OpenClaw de A à Z en 6 phases :
+Commande interactive pour créer un agent OpenClaw de A à Z en 7 phases (phase 0 à phase 6) :
 - **Phase 0** : Installation (Node.js, Bun, OpenClaw)
 - **Phase 1** : Choix du template (Polyvalent, Commercial, SAV, Assistant)
 - **Phase 2** : Identité de l'agent (IDENTITY.md, USER.md, SOUL.md)
